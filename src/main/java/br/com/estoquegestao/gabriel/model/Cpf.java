@@ -38,7 +38,7 @@ public class Cpf {
             throw new IllegalArgumentException("CPF inválido");
         }
     }
-    return cpf;
+        return cpf;
     }
 
     public String getCpf() {

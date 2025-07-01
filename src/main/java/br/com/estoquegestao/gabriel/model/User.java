@@ -1,27 +1,21 @@
 package br.com.estoquegestao.gabriel.model;
 
+import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Setter
+@ToString
 public class User {
     private Cpf cpf;
-    private String senha;
+    @Getter
     private String nome;
     private Email email;
-
-    public User(Cpf cpf, String senha, String nome, Email email){
-        this.cpf = cpf;
-        this.senha = senha;
-        this.nome = nome;
-        this.email = email;
-    }
+    @Getter
+    private String senha;
 
     public String getCpf() {return this.cpf.getCpf();}
 
-    public String getSenha() {return this.senha;}
-
-    public String getNome() {return this.nome;}
-
     public String getEmail() {return this.email.getEmail();}
-    
+
 }
