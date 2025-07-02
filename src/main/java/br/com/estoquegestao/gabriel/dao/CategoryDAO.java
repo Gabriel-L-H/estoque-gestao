@@ -68,7 +68,7 @@ public class CategoryDAO {
         }
     }
 
-    public Category findProduct(Category category){
+    public Category findCategory(Category category){
         String sql = "select tipo, marca, fornecedor from categoria where id = ?";
         Category categoryFound = new Category();
         categoryFound.setId(category.getId());
