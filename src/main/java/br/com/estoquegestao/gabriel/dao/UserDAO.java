@@ -25,7 +25,6 @@ public class UserDAO {
             stmt.setString(3, user.getNome());
             stmt.setString(4, user.getEmail());
             int row = stmt.executeUpdate();
-            Logger logger = LoggerFactory.getLogger(UserDAO.class);
             if (row == 0){
                 logger.warn("Insert ran but no rows affected.");
             }
@@ -104,9 +103,9 @@ public class UserDAO {
                     users.add(user);
                 }
             }
-            logger.info("Users has found with sucess");
+            logger.info("All users has found with sucess");
         } catch (SQLException e) {
-            logger.error("Err in found by users");
+            logger.error("Err in found by all users");
             e.printStackTrace();
         }
         return users;

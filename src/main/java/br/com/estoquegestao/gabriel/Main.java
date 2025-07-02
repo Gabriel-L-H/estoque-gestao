@@ -1,16 +1,33 @@
 package br.com.estoquegestao.gabriel;
 
+import br.com.estoquegestao.gabriel.dao.CategoryDAO;
+import br.com.estoquegestao.gabriel.dao.ProductDAO;
 import br.com.estoquegestao.gabriel.dao.UserDAO;
-import br.com.estoquegestao.gabriel.model.Cpf;
+import br.com.estoquegestao.gabriel.model.Category;
+import br.com.estoquegestao.gabriel.model.Product;
+import br.com.estoquegestao.gabriel.model.Tipo;
 import br.com.estoquegestao.gabriel.model.User;
+
+import java.math.BigDecimal;
 
 public class Main {
     public static void main(String[] args) {
         try {
-            UserDAO g = new UserDAO();
-            User user = new User();
-            user.setCpf(new Cpf("41043946020"));
-            System.out.println(g.findUser(user).toString());
+            CategoryDAO categoryTest = new CategoryDAO();
+            Category category = new Category();
+            category.setId(2);
+            category.setTipo(Tipo.ELETRONICO);
+            category.setMarca("Acer");
+            category.setFornecedor("Amazon");
+            categoryTest.create(category);
+            ProductDAO productTest = new ProductDAO();
+            Product product = new Product();
+            product.setId(12);
+            product.setFk_categoria(2);
+            product.setNome("Notebook Gamer Acer");
+            product.setPreco(new BigDecimal(5899.99));
+            product.setQuantidadeEstoque(4);
+            productTest.create(product);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
