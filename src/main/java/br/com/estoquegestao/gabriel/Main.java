@@ -2,11 +2,9 @@ package br.com.estoquegestao.gabriel;
 
 import br.com.estoquegestao.gabriel.dao.CategoryDAO;
 import br.com.estoquegestao.gabriel.dao.ProductDAO;
-import br.com.estoquegestao.gabriel.dao.UserDAO;
 import br.com.estoquegestao.gabriel.model.Category;
 import br.com.estoquegestao.gabriel.model.Product;
 import br.com.estoquegestao.gabriel.model.Tipo;
-import br.com.estoquegestao.gabriel.model.User;
 
 import java.math.BigDecimal;
 

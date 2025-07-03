@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
@@ -30,6 +31,10 @@ public class UserDAO {
             }
             logger.info("New user registered! Rows inserted: {}", row);
         } catch (SQLException e) {
+            if (e.getErrorCode() == 1062){
+                logger.warn("Duplicate detected: this user exists");
+                throw new IllegalStateException("Err in execute SQL: user exists" + e);
+            }
             logger.error("Err in register new user");
             throw new RuntimeException("Err in execute SQL: " + e);
         }
@@ -46,7 +51,7 @@ public class UserDAO {
             if (row == 0){
                 logger.warn("Update ran but no rows affected.");
             }
-            logger.info("Update with sucess! Rows inserted: {}", row);
+            logger.info("Update successful! Rows affected: {}", row);
         }catch (SQLException e) {
             logger.error("Err in update user by cpf = {}", user.getCpf());
             throw new RuntimeException("Err in execute SQL: " + e);
@@ -60,32 +65,34 @@ public class UserDAO {
             stmt.setString(1, user.getCpf());
             int sucess = stmt.executeUpdate();
             if (sucess == 0){logger.warn("User don't found");}
-            logger.info("User deleted with sucess");
+            logger.info("User deleted successful");
         }catch (SQLException e){
             logger.error("Err in delete user by cpf = {}", user.getCpf());
             e.printStackTrace();
         }
     }
 
-    public User findUser(User user){
+    public Optional<User> findUser(User user){
         String sql = "select nome, email from usuario where cpf = ?";
-        User userFound = new User();
-        userFound.setCpf(new Cpf(user.getCpf()));
         try(Connection conn = Conexao.getConexao();
             PreparedStatement stmt = conn.prepareStatement(sql)){
             stmt.setString(1, user.getCpf());
             try(ResultSet result = stmt.executeQuery()){
                  if(result.next()){
+                     User userFound = new User();
+                     userFound.setCpf(new Cpf(user.getCpf()));
                     userFound.setNome(result.getString("nome"));
                     userFound.setEmail(new Email(result.getString("email")));
+                    logger.info("User has found successful");
+                     return Optional.of(userFound);
                 }
+                logger.info("User is null");
+                return Optional.empty();
             }
-            logger.info("User has found with sucess");
         }catch (SQLException e){
             logger.error("Err in found user by cpf = {}", user.getCpf());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-        return userFound;
     }
 
     public List<User> findAll(){
@@ -103,7 +110,7 @@ public class UserDAO {
                     users.add(user);
                 }
             }
-            logger.info("All users has found with sucess");
+            logger.info("All users has found successful");
         } catch (SQLException e) {
             logger.error("Err in found by all users");
             e.printStackTrace();
