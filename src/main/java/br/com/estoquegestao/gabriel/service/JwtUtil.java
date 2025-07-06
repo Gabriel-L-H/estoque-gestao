@@ -1,5 +1,6 @@
 package br.com.estoquegestao.gabriel.service;
 
+import br.com.estoquegestao.gabriel.config.KeyJWT;
 import br.com.estoquegestao.gabriel.model.User;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -13,7 +14,7 @@ import java.util.Date;
 
 public class JwtUtil {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
-    private static final Algorithm secretKey = Algorithm.HMAC256("9fb11c3e7a5669831b10608d53c331e89918d69c");
+    private static final Algorithm secretKey = Algorithm.HMAC256(KeyJWT.getJwtSecretKey());
     private static final JWTVerifier verifier = JWT.require(secretKey)
                                                 .withIssuer("https://localhost:3306/estoque_vendas")
                                                 .build();
