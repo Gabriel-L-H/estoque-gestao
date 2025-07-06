@@ -2,9 +2,12 @@ package br.com.estoquegestao.gabriel.service;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PasswordUtil {
     private static final Argon2 argon = Argon2Factory.create();
+    private static final Logger logger = LoggerFactory.getLogger(PasswordUtil.class);
     private static final int ITERATIONS  = 3;
     private static final int MEMORY_KB   = 128 * 1024; // 128 MiB
     private static final int PARALLELISM = 1;
@@ -23,6 +26,7 @@ public class PasswordUtil {
         try{
             return argon.verify(storedHash, password);
         } catch (Exception e) {
+            logger.error("Incorrect password");
             throw new RuntimeException("Err in verification password" + e);
         }finally {
             argon.wipeArray(password);
