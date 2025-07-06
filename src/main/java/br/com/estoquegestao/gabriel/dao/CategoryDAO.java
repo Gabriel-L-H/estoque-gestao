@@ -87,7 +87,7 @@ public class CategoryDAO {
                     logger.info("Category has found successful");
                     return Optional.of(categoryFound);
                 }
-                logger.info("Category is null");
+                logger.error("Category is null");
                 return Optional.empty();
             }
         }catch (SQLException e){
@@ -105,7 +105,7 @@ public class CategoryDAO {
             try(ResultSet result = stmt.executeQuery()){
                 while(result.next()){
                     Category category = new Category();
-                    category.setId(result.getInt("int"));
+                    category.setId(result.getInt("id"));
                     category.setTipo(Tipo.valueOf(result.getString("tipo")));
                     category.setMarca(result.getString("marca"));
                     category.setFornecedor(result.getString("fornecedor"));
