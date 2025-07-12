@@ -14,6 +14,7 @@ import java.util.Date;
 
 public class JwtUtil {
     private static final Dotenv dotenv = Dotenv.configure()
+                                        .directory("estoque-gestao/.env")
                                         .ignoreIfMissing()
                                         .load();
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
@@ -32,8 +33,8 @@ public class JwtUtil {
                     .withExpiresAt(new Date(System.currentTimeMillis() + 1800000))
                     .sign(secretKey);
         } catch (RuntimeException e) {
-            logger.error("Err in creation the token by user {}", user.getCpf());
-            throw new RuntimeException("Err in creation the token: " + e);
+            logger.error("Error in creation the token by user {}", user.getCpf());
+            throw new RuntimeException("Error in creation the token: " + e);
         }
     }
 
@@ -42,8 +43,8 @@ public class JwtUtil {
             DecodedJWT jwt = verifier.verify(token);
             return jwt;
         }catch (JWTVerificationException e){
-            logger.error("Err in token verification");
-            throw new RuntimeException("Err in token verification: " + e);
+            logger.error("Error in token verification");
+            throw new RuntimeException("Error in token verification: " + e);
         }
     }
 }

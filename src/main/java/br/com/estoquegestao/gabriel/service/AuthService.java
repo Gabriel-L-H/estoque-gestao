@@ -5,6 +5,8 @@ import br.com.estoquegestao.gabriel.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
+
 public class AuthService {
     private final UserDAO userDAO;
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
@@ -17,27 +19,27 @@ public class AuthService {
         try{
             if(this.userDAO.findUser(user).isPresent()){throw new RuntimeException("User exists");}
             String hash = PasswordUtil.hash(password);
-            user.setSenha(hash);
+            user.setPassword(hash);
             this.userDAO.create(user);
-            logger.info("User {} sign-Up successful", user.getNome());
-        } catch (RuntimeException e) {
+            logger.info("User {} sign-Up successful", user.getName());
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void login(User user){
+    public void login(User user) throws SQLException {
         User dbUser = this.userDAO.findUser(user)
                         .orElseThrow();
-        if(!PasswordUtil.verify(dbUser.getSenha(), user.getSenha().toCharArray())){
+        if(!PasswordUtil.verify(dbUser.getPassword(), user.getPassword().toCharArray())){
             throw new RuntimeException("Incorrect Password");
         }
 
-        if (PasswordUtil.needRehash(dbUser.getSenha())){
-            String newHash = PasswordUtil.hash(user.getSenha().toCharArray());
-            user.setSenha(newHash);
+        if (PasswordUtil.needRehash(dbUser.getPassword())){
+            String newHash = PasswordUtil.hash(user.getPassword().toCharArray());
+            user.setPassword(newHash);
             userDAO.updatePassword(user);
         }
 
-        logger.info("User {} logged in successful", user.getNome());
+        logger.info("User {} logged in successful", user.getName());
     }
 }

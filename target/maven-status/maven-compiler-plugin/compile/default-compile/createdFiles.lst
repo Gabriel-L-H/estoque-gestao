@@ -13,6 +13,6 @@ br\com\estoquegestao\gabriel\Main.class
 br\com\estoquegestao\gabriel\service\PasswordUtil.class
 br\com\estoquegestao\gabriel\dao\UserDAO.class
 br\com\estoquegestao\gabriel\model\Sale.class
-br\com\estoquegestao\gabriel\model\Tipo.class
+br\com\estoquegestao\gabriel\model\type.class
 br\com\estoquegestao\gabriel\model\Cpf.class
 br\com\estoquegestao\gabriel\model\Email.class

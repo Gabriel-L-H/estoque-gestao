@@ -9,7 +9,7 @@ import lombok.ToString;
 @ToString
 public class Category {
     private int id;
-    private Tipo tipo;
-    private String marca;
-    private String fornecedor;
+    private Type type;
+    private String brand;
+    private String supplier;
 }

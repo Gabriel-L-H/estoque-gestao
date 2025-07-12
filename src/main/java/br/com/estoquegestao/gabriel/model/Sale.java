@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @ToString
 public class Sale {
     private int id;
-    private String fk_usuario;
-    private LocalDateTime dataHora;
-    private BigDecimal valorTotal;
+    private String fk_user;
+    private LocalDateTime dateTime;
+    private BigDecimal totalValue;
 }

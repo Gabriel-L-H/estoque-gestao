@@ -13,10 +13,10 @@ public class User {
     @Getter
     private List<String> role;
     @Getter
-    private String nome;
+    private String name;
     private Email email;
     @Getter
-    private String senha;
+    private String password;
 
     public String getCpf() {return this.cpf.getCpf();}
 
