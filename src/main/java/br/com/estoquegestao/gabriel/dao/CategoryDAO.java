@@ -17,58 +17,87 @@ import java.util.Optional;
 
 public class CategoryDAO {
     private static final Logger logger = LoggerFactory.getLogger(CategoryDAO.class);
-    public void create(Category category){
+    public void create(Category category) throws SQLException{
         String sql = "INSERT INTO category (type, brand, supplier) VALUES (?, ?, ?)";
-        try(Connection conn = ConnectionHikari.getConnection();
-            PreparedStatement stmt  = conn.prepareStatement(sql)){
-            stmt.setString(1, category.getType().name());
-            stmt.setString(2, category.getBrand());
-            stmt.setString(3, category.getSupplier());
-            int row = stmt.executeUpdate();
-            if (row == 0){
-                logger.warn("Insert ran but no rows affected.");
+        Connection conn = null;
+        try {
+            conn = ConnectionHikari.getConnection();
+            conn.setAutoCommit(false);
+
+            try(PreparedStatement stmt  = conn.prepareStatement(sql)) {
+                stmt.setString(1, category.getType().name());
+                stmt.setString(2, category.getBrand());
+                stmt.setString(3, category.getSupplier());
+                int row = stmt.executeUpdate();
+                if (row == 0) {
+                    logger.warn("Insert ran but no rows affected.");
+                }
+                logger.info("New category added! Rows inserted: {}", row);
             }
-            logger.info("New category added! Rows inserted: {}", row);
+            conn.commit();
         } catch (SQLException e) {
+            ConnectionHikari.safeRollback(conn);
             if (e.getErrorCode() == 1062){
                 logger.warn("Duplicate detected: this category exists");
                 throw new IllegalStateException("Error in execute SQL: category exists" + e);
             }
             logger.error("Error in register new category");
             throw new RuntimeException("Error in execute SQL: " + e);
+        } finally {
+            ConnectionHikari.resetAndCloseConnection(conn);
         }
     }
 
-    public void update(Category category){
+    public void update(Category category) throws SQLException{
         String sql = "UPDATE category SET type = ?, brand = ?, supplier = ? WHERE id = ?";
-        try(Connection conn = ConnectionHikari.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, category.getType().name());
-            stmt.setString(2, category.getBrand());
-            stmt.setString(3, category.getSupplier());
-            stmt.setInt(4, category.getId());
-            int row = stmt.executeUpdate();
-            if (row == 0){
-                logger.warn("Update ran but no rows affected.");
+        Connection conn = null;
+        try {
+            conn = ConnectionHikari.getConnection();
+            conn.setAutoCommit(false);
+
+            try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, category.getType().name());
+                stmt.setString(2, category.getBrand());
+                stmt.setString(3, category.getSupplier());
+                stmt.setInt(4, category.getId());
+                int row = stmt.executeUpdate();
+                if (row == 0) {
+                    logger.warn("Update ran but no rows affected.");
+                }
+                logger.info("Update successful! Rows affected: {}", row);
             }
-            logger.info("Update successful! Rows affected: {}", row);
+            conn.commit();
         }catch (SQLException e) {
+            ConnectionHikari.safeRollback(conn);
             logger.error("Error in update category by id = {}", category.getId());
             throw new RuntimeException("Error in execute SQL: " + e);
+        } finally {
+            ConnectionHikari.resetAndCloseConnection(conn);
         }
     }
 
-    public void delete(Category category){
+    public void delete(Category category) throws SQLException{
         String sql = "DELETE FROM category WHERE id = ?";
-        try(Connection conn = ConnectionHikari.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, category.getId());
-            int success = stmt.executeUpdate();
-            if (success == 0){logger.warn("Category not found");}
-            logger.info("Category deleted successful");
+        Connection conn = null;
+        try {
+            conn = ConnectionHikari.getConnection();
+            conn.setAutoCommit(false);
+
+            try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, category.getId());
+                int success = stmt.executeUpdate();
+                if (success == 0) {
+                    logger.warn("Category not found");
+                }
+                logger.info("Category deleted successful");
+            }
+            conn.commit();
         }catch (SQLException e){
+            ConnectionHikari.safeRollback(conn);
             logger.error("Error in delete category by id = {}", category.getId());
-            e.printStackTrace();
+            throw new SQLException("Error in delete category: " + e);
+        } finally {
+            ConnectionHikari.resetAndCloseConnection(conn);
         }
     }
 

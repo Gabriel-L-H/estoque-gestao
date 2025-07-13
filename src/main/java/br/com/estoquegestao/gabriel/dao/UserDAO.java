@@ -37,8 +37,8 @@ public class UserDAO {
                     logger.warn("Insert ran but no rows affected.");
                 }
                 logger.info("New user registered! Rows inserted: {}", row);
-                conn.commit();
             }
+            conn.commit();
         } catch (SQLException e) {
             ConnectionHikari.safeRollback(conn);
             if (e.getErrorCode() == 1062) {
@@ -52,21 +52,30 @@ public class UserDAO {
         }
     }
 
-    public void update(User user){
+    public void update(User user) throws SQLException{
         String sql = "UPDATE user SET name = ?, email = ? WHERE cpf = ?";
-        try(Connection conn = ConnectionHikari.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, user.getName());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getCpf());
-            int row = stmt.executeUpdate();
-            if (row == 0){
-                logger.warn("Update ran but no rows affected.");
+        Connection conn = null;
+        try {
+            conn = ConnectionHikari.getConnection();
+            conn.setAutoCommit(false);
+
+            try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, user.getName());
+                stmt.setString(2, user.getEmail());
+                stmt.setString(3, user.getCpf());
+                int row = stmt.executeUpdate();
+                if (row == 0) {
+                    logger.warn("Update ran but no rows affected.");
+                }
+                logger.info("Update successful! Rows affected: {}", row);
             }
-            logger.info("Update successful! Rows affected: {}", row);
+            conn.commit();
         }catch (SQLException e) {
+            ConnectionHikari.safeRollback(conn);
             logger.error("Error in update user by cpf = {}", user.getCpf());
             throw new RuntimeException("Error in execute SQL: " + e);
+        } finally {
+            ConnectionHikari.resetAndCloseConnection(conn);
         }
     }
 
@@ -86,6 +95,7 @@ public class UserDAO {
                 }
                 logger.info("Update password successful! Rows affected: {}", row);
             }
+            conn.commit();
         }catch (SQLException e) {
             ConnectionHikari.safeRollback(conn);
             logger.error("Error in update user password by cpf = {}", user.getCpf());
@@ -110,10 +120,11 @@ public class UserDAO {
                 }
                 logger.info("User deleted successful");
             }
+            conn.commit();
         }catch (SQLException e){
             ConnectionHikari.safeRollback(conn);
             logger.error("Error in delete user by cpf = {}", user.getCpf());
-            e.printStackTrace();
+            throw new SQLException("Error in delete user: " + e);
         } finally {
             ConnectionHikari.resetAndCloseConnection(conn);
         }

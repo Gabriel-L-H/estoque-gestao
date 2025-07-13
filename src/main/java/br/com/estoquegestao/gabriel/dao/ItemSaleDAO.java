@@ -32,6 +32,7 @@ public class ItemSaleDAO {
                 }
                 logger.info("New item_sale added! Rows inserted: {}", row);
             }
+            conn.commit();
         } catch (SQLException e) {
             ConnectionHikari.safeRollback(conn);
             if (e.getErrorCode() == 1062){
@@ -61,6 +62,7 @@ public class ItemSaleDAO {
                 }
                 logger.info("Update successful! Rows affected: {}", row);
             }
+            conn.commit();
         }catch (SQLException e) {
             ConnectionHikari.safeRollback(conn);
             logger.error("Error in update item_sale by id = {}", itemSale.getId());
@@ -84,10 +86,11 @@ public class ItemSaleDAO {
                 }
                 logger.info("Item_sale deleted successful");
             }
+            conn.commit();
         }catch (SQLException e){
             ConnectionHikari.safeRollback(conn);
             logger.error("Error in delete item_sale by id = {}", itemSale.getId());
-            e.printStackTrace();
+            throw new SQLException("Error in delete item_sale: " + e);
         } finally {
             ConnectionHikari.resetAndCloseConnection(conn);
         }
