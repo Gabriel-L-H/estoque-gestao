@@ -43,7 +43,6 @@ public class UserDAO {
             ConnectionHikari.safeRollback(conn);
             if (e.getErrorCode() == 1062) {
                 logger.warn("Duplicate detected: this user exists");
-                throw new IllegalStateException("Error in execute SQL: user exists" + e);
             }
             logger.error("Error in register new user");
             throw new RuntimeException("Error in execute SQL: " + e);
@@ -107,10 +106,18 @@ public class UserDAO {
 
     public void delete(User user) throws SQLException{
         String sql = "DELETE FROM user WHERE cpf = ?";
+        String sqlFk = "DELETE FROM sale WHERE fk_user = ?";
         Connection conn = null;
         try {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
+
+            try(PreparedStatement stmt = conn.prepareStatement(sqlFk)){
+                stmt.setString(1, user.getCpf());
+                int success = stmt.executeUpdate();
+                if (success == 0) {logger.warn("UserFk not found");}
+                logger.info("UserFk deleted successful");
+            }
 
             try(PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, user.getCpf());
@@ -130,17 +137,17 @@ public class UserDAO {
         }
     }
 
-    public Optional<User> findUser(User user){
+    public Optional<User> findUser(String cpf){
         String sql = "SELECT name, role, password, email FROM user WHERE cpf = ?";
         try(Connection conn = ConnectionHikari.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, user.getCpf());
+            stmt.setString(1, cpf);
             try(ResultSet result = stmt.executeQuery()){
                  if(!result.next()){
                      return Optional.empty();
                 }
                 User userFound = new User();
-                userFound.setCpf(new Cpf(user.getCpf()));
+                userFound.setCpf(new Cpf(cpf));
                 userFound.setName(result.getString("name"));
                 String rolesCsv = result.getString("role");
                 List<String> roles = rolesCsv == null || rolesCsv.isBlank()
@@ -153,7 +160,7 @@ public class UserDAO {
                 return Optional.of(userFound);
             }
         }catch (SQLException e){
-            logger.error("Error in found user by cpf = {}", user.getCpf());
+            logger.error("Error in found user by cpf = {}", cpf);
             throw new RuntimeException(e);
         }
     }

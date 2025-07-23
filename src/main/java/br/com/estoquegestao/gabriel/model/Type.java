@@ -1,10 +1,10 @@
 package br.com.estoquegestao.gabriel.model;
 
 public enum Type {
-    ELETRONIC,
+    ELECTRONIC,
     CLOTHING,
     HOUSEHOLD,
     FOOD,
     COSMETICS,
-    ENTERTAIMENT;
+    ENTERTAINMENT
 }

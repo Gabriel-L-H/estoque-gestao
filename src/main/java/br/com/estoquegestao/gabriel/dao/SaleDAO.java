@@ -5,10 +5,7 @@ import br.com.estoquegestao.gabriel.model.Sale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,14 +13,14 @@ import java.util.Optional;
 
 public class SaleDAO {
     private static final Logger logger = LoggerFactory.getLogger(SaleDAO.class);
-    public void create(Sale sale) throws SQLException{
+    public int create(Sale sale) throws SQLException{
         String sql = "INSERT INTO sale (fk_user, totalValue) VALUES (?, ?)";
         Connection conn = null;
         try {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
-
-            try(PreparedStatement stmt  = conn.prepareStatement(sql)) {
+            int saleId;
+            try(PreparedStatement stmt  = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)){
                 stmt.setString(1, sale.getFk_user());
                 stmt.setBigDecimal(2, sale.getTotalValue());
                 int row = stmt.executeUpdate();
@@ -31,13 +28,16 @@ public class SaleDAO {
                     logger.warn("Insert ran but no rows affected.");
                 }
                 logger.info("New sale added! Rows inserted: {}", row);
+                ResultSet rs = stmt.getGeneratedKeys();
+                rs.next();
+                saleId = rs.getInt(1);
             }
             conn.commit();
+            return saleId;
         } catch (SQLException e) {
             ConnectionHikari.safeRollback(conn);
             if (e.getErrorCode() == 1062){
                 logger.warn("Duplicate detected: this sale exists");
-                throw new IllegalStateException("Error in execute SQL: sale exists" + e);
             }
             logger.error("Error in register new sale");
             throw new RuntimeException("Error in execute SQL: " + e);
@@ -72,40 +72,46 @@ public class SaleDAO {
         }
     }
 
-    public void delete(Sale sale) throws SQLException{
+    public void delete(int id) throws SQLException{
         String sql = "DELETE FROM sale WHERE id = ?";
+        String sqlFk = "DELETE FROM item_sale WHERE fk_sale = ?";
         Connection conn = null;
         try {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
 
-            try(PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, sale.getId());
+            try(PreparedStatement stmt = conn.prepareStatement(sqlFk)){
+                stmt.setInt(1, id);
                 int success = stmt.executeUpdate();
-                if (success == 0) {
-                    logger.warn("Sale not found");
-                }
+                if (success == 0) {logger.warn("SaleFk not found");}
+                logger.info("SaleFk deleted successful");
+            }
+
+            try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, id);
+                int success = stmt.executeUpdate();
+                if (success == 0) {logger.warn("Sale not found");}
                 logger.info("Sale deleted successful");
             }
             conn.commit();
         }catch (SQLException e){
             ConnectionHikari.safeRollback(conn);
-            logger.error("Error in delete sale by id = {}", sale.getId());
+            logger.error("Error in delete sale by id = {}", id);
             throw new SQLException("Error in delete sale: " + e);
         } finally {
             ConnectionHikari.resetAndCloseConnection(conn);
         }
     }
 
-    public Optional<Sale> findSale(Sale sale){
+    public Optional<Sale> findSale(int id){
         String sql = "SELECT id, fk_user, dateTime, totalValue FROM sale WHERE id = ?";
         try(Connection conn = ConnectionHikari.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, sale.getId());
+            stmt.setInt(1, id);
             try(ResultSet result = stmt.executeQuery()){
                 if(result.next()){
                     Sale saleFound = new Sale();
-                    saleFound.setId(sale.getId());
+                    saleFound.setId(id);
                     saleFound.setFk_user(result.getString("fk_user"));
                     saleFound.setDateTime(result.getObject("dateTime", LocalDateTime.class));
                     saleFound.setTotalValue(result.getBigDecimal("totalValue"));
@@ -116,7 +122,7 @@ public class SaleDAO {
                 return Optional.empty();
             }
         }catch (SQLException e){
-            logger.error("Error in found sale by id = {}", sale.getId());
+            logger.error("Error in found sale by id = {}", id);
             throw new RuntimeException(e);
         }
     }

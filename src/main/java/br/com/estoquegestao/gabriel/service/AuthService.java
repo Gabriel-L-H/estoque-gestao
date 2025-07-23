@@ -17,7 +17,7 @@ public class AuthService {
 
     public void signup(User user, char[] password){
         try{
-            if(this.userDAO.findUser(user).isPresent()){throw new RuntimeException("User exists");}
+            if(this.userDAO.findUser(user.getCpf()).isPresent()){throw new RuntimeException("User exists");}
             String hash = PasswordUtil.hash(password);
             user.setPassword(hash);
             this.userDAO.create(user);
@@ -28,7 +28,7 @@ public class AuthService {
     }
 
     public void login(User user) throws SQLException {
-        User dbUser = this.userDAO.findUser(user)
+        User dbUser = this.userDAO.findUser(user.getCpf())
                         .orElseThrow();
         if(!PasswordUtil.verify(dbUser.getPassword(), user.getPassword().toCharArray())){
             throw new RuntimeException("Incorrect Password");

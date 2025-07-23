@@ -5,39 +5,57 @@ import br.com.estoquegestao.gabriel.model.ItemSale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class ItemSaleDAO {
     private static final Logger logger = LoggerFactory.getLogger(ItemSaleDAO.class);
-    public void create(ItemSale itemSale) throws SQLException {
+    public void create(List<ItemSale> itemSale) throws SQLException {
         String sql = "INSERT INTO item_sale (fk_product, fk_sale, quantity, price) VALUES (?, ?, ?, ?)";
         Connection conn = null;
+        int[] count;
         try {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
-            try(PreparedStatement stmt  = conn.prepareStatement(sql)){
-                stmt.setInt(1, itemSale.getFk_product());
-                stmt.setInt(2, itemSale.getFk_sale());
-                stmt.setInt(3, itemSale.getQuantity());
-                stmt.setBigDecimal(4, itemSale.getPrice());
-                int row = stmt.executeUpdate();
-                if (row == 0){
-                    logger.warn("Insert ran but no rows affected.");
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                for (ItemSale itemS : itemSale) {
+                    stmt.setInt(1, itemS.getFk_product());
+                    stmt.setInt(2, itemS.getFk_sale());
+                    stmt.setInt(3, itemS.getQuantity());
+                    stmt.setBigDecimal(4, itemS.getPrice());
+                    stmt.addBatch();
                 }
-                logger.info("New item_sale added! Rows inserted: {}", row);
+                count = stmt.executeBatch();
             }
+            int totalRow = 0;
+            for (int result : count){
+                if (result > 0){totalRow++;}
+                if (result == Statement.SUCCESS_NO_INFO) {
+                    logger.info("Success in inserted, but without info");
+                    totalRow++;
+                }
+            }
+            logger.info("Nem item_sale added! Rows inserted: {}", totalRow);
             conn.commit();
+        } catch (BatchUpdateException e) {
+            ConnectionHikari.safeRollback(conn);
+            count = e.getUpdateCounts();
+            for (int result : count) {
+                if (result == Statement.EXECUTE_FAILED)
+                    logger.error("Failed in batch index (BatchUpdateException), by {}", result);
+                else if (result == Statement.SUCCESS_NO_INFO)
+                    logger.warn("Batch index ok, but without info");
+                else
+                    logger.info("Batch index inserted {} rows", result);
+            }
+            logger.error("BatchUpdateException: error in batch. updateCounts = {}", Arrays.toString(count));
         } catch (SQLException e) {
             ConnectionHikari.safeRollback(conn);
-            if (e.getErrorCode() == 1062){
+            if (e.getErrorCode() == 1062) {
                 logger.warn("Duplicate detected: this item_sale exists");
-                throw new IllegalStateException("Error in execute SQL: item_sale exists" + e);
             }
             logger.error("Error in register new item_sale");
             throw new RuntimeException("Error in execute SQL: " + e);
@@ -72,14 +90,14 @@ public class ItemSaleDAO {
         }
     }
 
-    public void delete(ItemSale itemSale) throws SQLException {
+    public void delete(int id) throws SQLException {
         String sql = "DELETE FROM item_sale WHERE id = ?";
         Connection conn = null;
         try {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
             try(PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, itemSale.getId());
+                stmt.setInt(1, id);
                 int success = stmt.executeUpdate();
                 if (success == 0) {
                     logger.warn("Item_sale not found");
@@ -89,22 +107,22 @@ public class ItemSaleDAO {
             conn.commit();
         }catch (SQLException e){
             ConnectionHikari.safeRollback(conn);
-            logger.error("Error in delete item_sale by id = {}", itemSale.getId());
+            logger.error("Error in delete item_sale by id = {}", id);
             throw new SQLException("Error in delete item_sale: " + e);
         } finally {
             ConnectionHikari.resetAndCloseConnection(conn);
         }
     }
 
-    public Optional<ItemSale> findItemSale(ItemSale itemSale){
+    public Optional<ItemSale> findItemSale(int id){
         String sql = "SELECT fk_product, fk_sale, quantity, price FROM item_sale WHERE id = ?";
         try(Connection conn = ConnectionHikari.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, itemSale.getId());
+            stmt.setInt(1, id);
             try(ResultSet result = stmt.executeQuery()){
                 if(result.next()){
                     ItemSale itemSaleFound = new ItemSale();
-                    itemSaleFound.setId(itemSale.getId());
+                    itemSaleFound.setId(id);
                     itemSaleFound.setFk_product(result.getInt("fk_product"));
                     itemSaleFound.setFk_sale(result.getInt("fk_sale"));
                     itemSaleFound.setQuantity(result.getInt("quantity"));
@@ -116,7 +134,7 @@ public class ItemSaleDAO {
                 return Optional.empty();
             }
         }catch (SQLException e){
-            logger.error("Error in found item_sale by id = {}", itemSale.getId());
+            logger.error("Error in found item_sale by id = {}", id);
             throw new RuntimeException(e);
         }
     }

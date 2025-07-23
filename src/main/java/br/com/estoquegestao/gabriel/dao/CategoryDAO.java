@@ -39,7 +39,6 @@ public class CategoryDAO {
             ConnectionHikari.safeRollback(conn);
             if (e.getErrorCode() == 1062){
                 logger.warn("Duplicate detected: this category exists");
-                throw new IllegalStateException("Error in execute SQL: category exists" + e);
             }
             logger.error("Error in register new category");
             throw new RuntimeException("Error in execute SQL: " + e);
@@ -76,15 +75,23 @@ public class CategoryDAO {
         }
     }
 
-    public void delete(Category category) throws SQLException{
+    public void delete(int id) throws SQLException{
         String sql = "DELETE FROM category WHERE id = ?";
+        String sqlFk = "DELETE FROM product WHERE fk_category = ?";
         Connection conn = null;
         try {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
 
+            try(PreparedStatement stmt = conn.prepareStatement(sqlFk)){
+                stmt.setInt(1, id);
+                int success = stmt.executeUpdate();
+                if (success == 0) {logger.warn("CategoryFk not found");}
+                logger.info("CategoryFK deleted successful");
+            }
+
             try(PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, category.getId());
+                stmt.setInt(1, id);
                 int success = stmt.executeUpdate();
                 if (success == 0) {
                     logger.warn("Category not found");
@@ -94,22 +101,22 @@ public class CategoryDAO {
             conn.commit();
         }catch (SQLException e){
             ConnectionHikari.safeRollback(conn);
-            logger.error("Error in delete category by id = {}", category.getId());
+            logger.error("Error in delete category by id = {}", id);
             throw new SQLException("Error in delete category: " + e);
         } finally {
             ConnectionHikari.resetAndCloseConnection(conn);
         }
     }
 
-    public Optional<Category> findCategory(Category category){
+    public Optional<Category> findCategory(int id){
         String sql = "SELECT type, brand, supplier FROM category WHERE id = ?";
         try(Connection conn = ConnectionHikari.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, category.getId());
+            stmt.setInt(1, id);
             try(ResultSet result = stmt.executeQuery()){
                 if(result.next()){
                     Category categoryFound = new Category();
-                    categoryFound.setId(category.getId());
+                    categoryFound.setId(id);
                     categoryFound.setType(Type.valueOf(result.getString("type")));
                     categoryFound.setBrand(result.getString("brand"));
                     categoryFound.setSupplier(result.getString("supplier"));
@@ -120,7 +127,7 @@ public class CategoryDAO {
                 return Optional.empty();
             }
         }catch (SQLException e){
-            logger.error("Error in found category by id = {}", category.getId());
+            logger.error("Error in found category by id = {}", id);
             throw new RuntimeException(e);
         }
     }

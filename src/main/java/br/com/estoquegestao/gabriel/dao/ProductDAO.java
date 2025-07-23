@@ -38,7 +38,6 @@ public class ProductDAO {
             ConnectionHikari.safeRollback(conn);
             if (e.getErrorCode() == 1062){
                 logger.warn("Duplicate detected: this product exists");
-                throw new IllegalStateException("Error in execute SQL: product exists" + e);
             }
             logger.error("Error in register new product");
             throw new RuntimeException("Error in execute SQL: " + e);
@@ -75,15 +74,23 @@ public class ProductDAO {
         }
     }
 
-    public void delete(Product product) throws SQLException{
+    public void delete(int id) throws SQLException{
         String sql = "DELETE FROM product WHERE id = ?";
+        String sqlFk = "DELETE FROM item_sale WHERE fk_product = ?";
         Connection conn = null;
         try {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
 
+            try(PreparedStatement stmt = conn.prepareStatement(sqlFk)){
+                stmt.setInt(1, id);
+                int success = stmt.executeUpdate();
+                if (success == 0) {logger.warn("ProductFk not found");}
+                logger.info("ProductFk deleted successful");
+            }
+
             try(PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, product.getId());
+                stmt.setInt(1, id);
                 int success = stmt.executeUpdate();
                 if (success == 0) {
                     logger.warn("Product not found");
@@ -93,22 +100,22 @@ public class ProductDAO {
             conn.commit();
         }catch (SQLException e){
             ConnectionHikari.safeRollback(conn);
-            logger.error("Error in delete product by id = {}", product.getId());
+            logger.error("Error in delete product by id = {}", id);
             throw new SQLException("Error in delete product: " + e);
         } finally {
             ConnectionHikari.resetAndCloseConnection(conn);
         }
     }
 
-    public Optional<Product> findProduct(Product product){
+    public Optional<Product> findProduct(int product){
         String sql = "SELECT fk_category, name, price, quantityStock FROM product WHERE id = ?";
         try(Connection conn = ConnectionHikari.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, product.getId());
+            stmt.setInt(1, product);
             try(ResultSet result = stmt.executeQuery()){
                 if(result.next()){
                     Product productFound = new Product();
-                    productFound.setId(product.getId());
+                    productFound.setId(product);
                     productFound.setFk_category(result.getInt("fk_category"));
                     productFound.setName(result.getString("name"));
                     productFound.setPrice(result.getBigDecimal("price"));
@@ -120,7 +127,7 @@ public class ProductDAO {
                 return Optional.empty();
             }
         }catch (SQLException e){
-            logger.error("Error in found Product by id = {}", product.getId());
+            logger.error("Error in found Product by id = {}", product);
             throw new RuntimeException(e);
         }
     }
