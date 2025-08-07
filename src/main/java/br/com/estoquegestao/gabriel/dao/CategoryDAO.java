@@ -7,10 +7,7 @@ import br.com.estoquegestao.gabriel.model.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +21,7 @@ public class CategoryDAO {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
 
-            try(PreparedStatement stmt  = conn.prepareStatement(sql)) {
+            try(PreparedStatement stmt  = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, category.getType().name());
                 stmt.setString(2, category.getBrand());
                 stmt.setString(3, category.getSupplier());
@@ -33,6 +30,12 @@ public class CategoryDAO {
                     logger.warn("Insert ran but no rows affected.");
                 }
                 logger.info("New category added! Rows inserted: {}", row);
+
+                ResultSet rs = stmt.getGeneratedKeys();
+                if(rs.next()){
+                    int id = rs.getInt(1);
+                    category.setId(id);
+                }
             }
             conn.commit();
         } catch (SQLException e) {
@@ -117,17 +120,41 @@ public class CategoryDAO {
                 if(result.next()){
                     Category categoryFound = new Category();
                     categoryFound.setId(id);
-                    categoryFound.setType(Type.valueOf(result.getString("type")));
+                    categoryFound.setType(Type.valueOf(result.getString("type").toUpperCase()));
                     categoryFound.setBrand(result.getString("brand"));
                     categoryFound.setSupplier(result.getString("supplier"));
                     logger.info("Category has found successful");
                     return Optional.of(categoryFound);
                 }
-                logger.error("Category is null");
+                logger.error("Category is null, not found");
                 return Optional.empty();
             }
         }catch (SQLException e){
             logger.error("Error in found category by id = {}", id);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Optional<Category> findCategoryByBrand(String brand){
+        String sql = "SELECT id, type, brand, supplier FROM category WHERE brand = ?";
+        try(Connection conn = ConnectionHikari.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setString(1, brand);
+            try(ResultSet result = stmt.executeQuery()){
+                if(result.next()){
+                    Category categoryFound = new Category();
+                    categoryFound.setId(result.getInt("id"));
+                    categoryFound.setType(Type.valueOf(result.getString("type").toUpperCase()));
+                    categoryFound.setBrand(result.getString("brand"));
+                    categoryFound.setSupplier(result.getString("supplier"));
+                    logger.info("Category has found successful");
+                    return Optional.of(categoryFound);
+                }
+                logger.error("Category is null, not found");
+                return Optional.empty();
+            }
+        }catch (SQLException e){
+            logger.error("Error in found category by brand = {}", brand);
             throw new RuntimeException(e);
         }
     }
@@ -142,7 +169,7 @@ public class CategoryDAO {
                 while(result.next()){
                     Category category = new Category();
                     category.setId(result.getInt("id"));
-                    category.setType(Type.valueOf(result.getString("type")));
+                    category.setType(Type.valueOf(result.getString("type").toUpperCase()));
                     category.setBrand(result.getString("brand"));
                     category.setSupplier(result.getString("supplier"));
                     categories.add(category);

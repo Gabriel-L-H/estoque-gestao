@@ -1,4 +1,4 @@
-package br.com.estoquegestao.gabriel.service;
+package br.com.estoquegestao.gabriel.utils;
 
 import br.com.estoquegestao.gabriel.model.User;
 import com.auth0.jwt.JWT;
@@ -10,11 +10,13 @@ import io.github.cdimascio.dotenv.Dotenv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 public class JwtUtil {
     private static final Dotenv dotenv = Dotenv.configure()
-                                        .directory("estoque-gestao/.env")
+                                        .directory("c:/Users/norag/OneDrive/Documentos/Projetos/estoque-gestao")
                                         .ignoreIfMissing()
                                         .load();
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
@@ -46,5 +48,24 @@ public class JwtUtil {
             logger.error("Error in token verification");
             throw new RuntimeException("Error in token verification: " + e);
         }
+    }
+
+    public static List<String> authenticationToken(DecodedJWT jwt){
+        String subject = jwt.getSubject();
+        String roles = jwt.getClaim("role").asString();
+        Instant expiresAt = jwt.getExpiresAt().toInstant();
+        Instant now = Instant.now();
+
+        if(expiresAt.isBefore(now)){
+            logger.error("Token expired");
+            throw new RuntimeException("Token expired at: " + expiresAt);
+        }
+
+        if(!"https://localhost:3306/estoque_vendas".equals(jwt.getIssuer())){
+            logger.error("Invalid issuer");
+            throw new RuntimeException("Invalid issuer: " + jwt.getIssuer());
+        }
+
+        return List.of(subject, roles);
     }
 }

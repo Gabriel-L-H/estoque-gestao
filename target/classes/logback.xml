@@ -1,6 +1,6 @@
 <configuration>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>estoque-gestao/logs/app.log</file>
+        <file>logs/app.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>logs/app.%d{yyyy-MM-dd}.%i.log</fileNamePattern>

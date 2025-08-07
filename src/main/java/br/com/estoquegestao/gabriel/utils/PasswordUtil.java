@@ -1,4 +1,4 @@
-package br.com.estoquegestao.gabriel.service;
+package br.com.estoquegestao.gabriel.utils;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;

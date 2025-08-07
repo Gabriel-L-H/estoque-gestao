@@ -19,7 +19,6 @@ public class SaleService {
     private final ItemSaleDAO itemSaleDAO;
     private final ProductDAO productDAO;
 
-
     private static final Logger logger = LoggerFactory.getLogger(SaleService.class);
 
     public SaleService(SaleDAO saleDAO, ItemSaleDAO itemSaleDAO, ProductDAO productDAO) {

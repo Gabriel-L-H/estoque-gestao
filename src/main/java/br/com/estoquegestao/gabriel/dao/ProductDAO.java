@@ -5,10 +5,7 @@ import br.com.estoquegestao.gabriel.model.Product;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +19,7 @@ public class ProductDAO {
             conn = ConnectionHikari.getConnection();
             conn.setAutoCommit(false);
 
-            try(PreparedStatement stmt  = conn.prepareStatement(sql)) {
+            try(PreparedStatement stmt  = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setInt(1, product.getFk_category());
                 stmt.setString(2, product.getName());
                 stmt.setBigDecimal(3, product.getPrice());
@@ -32,6 +29,12 @@ public class ProductDAO {
                     logger.warn("Insert ran but no rows affected.");
                 }
                 logger.info("New product added! Rows inserted: {}", row);
+
+                ResultSet rs = stmt.getGeneratedKeys();
+                if(rs.next()){
+                    int id = rs.getInt(1);
+                    product.setId(id);
+                }
             }
             conn.commit();
         } catch (SQLException e) {
@@ -123,7 +126,7 @@ public class ProductDAO {
                     logger.info("Product has found successful");
                     return Optional.of(productFound);
                 }
-                logger.info("Product is null");
+                logger.info("Product is null, not found");
                 return Optional.empty();
             }
         }catch (SQLException e){

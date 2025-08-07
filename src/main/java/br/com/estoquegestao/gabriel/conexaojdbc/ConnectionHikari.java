@@ -2,8 +2,6 @@ package br.com.estoquegestao.gabriel.conexaojdbc;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
-import br.com.estoquegestao.gabriel.dao.CategoryDAO;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.io.IOException;
@@ -17,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class ConnectionHikari {
     private static final Dotenv dotenv = Dotenv.configure()
-                                        .directory("estoque-gestao/.env")
+                                        .directory("c:/Users/norag/OneDrive/Documentos/Projetos/estoque-gestao")
                                         .ignoreIfMissing()
                                         .load();
     private static HikariDataSource dataSource;

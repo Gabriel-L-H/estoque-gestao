@@ -4,6 +4,7 @@ import br.com.estoquegestao.gabriel.dao.UserDAO;
 import br.com.estoquegestao.gabriel.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import br.com.estoquegestao.gabriel.utils.PasswordUtil;
 
 import java.sql.SQLException;
 
