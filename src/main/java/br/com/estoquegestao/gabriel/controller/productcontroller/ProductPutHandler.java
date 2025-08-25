@@ -1,34 +1,33 @@
 package br.com.estoquegestao.gabriel.controller.productcontroller;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 
 import br.com.estoquegestao.gabriel.dao.ProductDAO;
 import br.com.estoquegestao.gabriel.model.Product;
 import br.com.estoquegestao.gabriel.utils.JwtUtil;
 
-public class ProductDeleteHandler implements HttpHandler {
-    private static final Logger logger = LoggerFactory.getLogger(ProductDeleteHandler.class);
+public class ProductPutHandler implements HttpHandler{
+    private static final Logger logger = LoggerFactory.getLogger(ProductPutHandler.class);
     private final ObjectMapper mapper = new ObjectMapper();
     private final ProductDAO productDAO;
 
-    public ProductDeleteHandler(ProductDAO productDAO) {
+    public ProductPutHandler(ProductDAO productDAO) {
         this.productDAO = productDAO;
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        if (!"DELETE".equals(exchange.getRequestMethod())){
+        if (!"PUT".equals(exchange.getRequestMethod())){
             exchange.sendResponseHeaders(405, -1);
             logger.warn("Method not allowed");
             return;
@@ -41,16 +40,13 @@ public class ProductDeleteHandler implements HttpHandler {
             return;
         }
 
-        String path = exchange.getRequestURI().getPath();
-        String[] parts = path.split("/");
-
-        if (parts.length != 4){
-            exchange.sendResponseHeaders(400, -1);
-            logger.warn("Without id");
+        String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+        if (contentType == null || !contentType.startsWith("application/json")){
+            logger.warn("Unsupported Content-Type: {}", contentType);
+            exchange.sendResponseHeaders(415, -1);
             return;
         }
 
-        int id = Integer.parseInt(parts[3]);
         String token = header.substring(7);
         try{
             DecodedJWT jwt = JwtUtil.verifyToken(token);
@@ -62,20 +58,17 @@ public class ProductDeleteHandler implements HttpHandler {
                 return;
             }
 
-            Optional<Product> product = this.productDAO.findProduct(id);
-            if (product.isEmpty()){
-                exchange.sendResponseHeaders(404, -1);
-                logger.warn("Product not found");
-                return;
-            }
-            this.productDAO.delete(id);
+            InputStream requestBody = exchange.getRequestBody();
+            Product updateProduct = mapper.readValue(requestBody, Product.class);
 
-            byte[] response = mapper.writeValueAsBytes(product.get());
+            this.productDAO.update(updateProduct);
+            byte[] response = mapper.writeValueAsBytes(updateProduct);
 
             exchange.getResponseHeaders().add("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, response.length);
             exchange.getResponseBody().write(response);
             exchange.close();
+            logger.info("Product updated with Id {}", updateProduct.getId());
         } catch (Exception e) {
             exchange.sendResponseHeaders(405, -1);
             logger.error("Error processing request: " + e.getMessage());

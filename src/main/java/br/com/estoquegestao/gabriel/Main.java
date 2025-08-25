@@ -4,6 +4,8 @@ import br.com.estoquegestao.gabriel.controller.categorycontroller.*;
 import br.com.estoquegestao.gabriel.controller.productcontroller.ProductGetHandler;
 import br.com.estoquegestao.gabriel.controller.productcontroller.ProductGetIdHandler;
 import br.com.estoquegestao.gabriel.controller.productcontroller.ProductPostHandler;
+import br.com.estoquegestao.gabriel.controller.productcontroller.ProductPutHandler;
+import br.com.estoquegestao.gabriel.controller.productcontroller.ProductDeleteHandler;
 import br.com.estoquegestao.gabriel.dao.CategoryDAO;
 import br.com.estoquegestao.gabriel.service.CategoryService;
 import br.com.estoquegestao.gabriel.dao.ProductDAO;
@@ -31,6 +33,9 @@ public class Main {
             server.createContext("/products", new ProductGetHandler(new ProductDAO()));
             server.createContext("/product/", new ProductGetIdHandler(new ProductDAO()));
             server.createContext("/product/post", new ProductPostHandler(new ProductDAO()));
+            server.createContext("/product/put", new ProductPutHandler(new ProductDAO()));
+            server.createContext("/product/delete", new ProductDeleteHandler(new ProductDAO()));
+
             server.setExecutor(Executors.newFixedThreadPool(4));
             server.start();
             //UserDAO userDAO = new UserDAO();
