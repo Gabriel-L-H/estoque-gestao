@@ -6,9 +6,12 @@ import br.com.estoquegestao.gabriel.controller.productcontroller.ProductGetIdHan
 import br.com.estoquegestao.gabriel.controller.productcontroller.ProductPostHandler;
 import br.com.estoquegestao.gabriel.controller.productcontroller.ProductPutHandler;
 import br.com.estoquegestao.gabriel.controller.productcontroller.ProductDeleteHandler;
+import br.com.estoquegestao.gabriel.controller.usercontroller.UserRegister;
 import br.com.estoquegestao.gabriel.dao.CategoryDAO;
+import br.com.estoquegestao.gabriel.service.AuthService;
 import br.com.estoquegestao.gabriel.service.CategoryService;
 import br.com.estoquegestao.gabriel.dao.ProductDAO;
+import br.com.estoquegestao.gabriel.dao.UserDAO;
 import br.com.estoquegestao.gabriel.model.Cpf;
 import br.com.estoquegestao.gabriel.model.Email;
 import br.com.estoquegestao.gabriel.model.User;
@@ -35,6 +38,8 @@ public class Main {
             server.createContext("/product/post", new ProductPostHandler(new ProductDAO()));
             server.createContext("/product/put", new ProductPutHandler(new ProductDAO()));
             server.createContext("/product/delete", new ProductDeleteHandler(new ProductDAO()));
+
+            server.createContext("/auth/register", new UserRegister(new AuthService(new UserDAO())));
 
             server.setExecutor(Executors.newFixedThreadPool(4));
             server.start();
