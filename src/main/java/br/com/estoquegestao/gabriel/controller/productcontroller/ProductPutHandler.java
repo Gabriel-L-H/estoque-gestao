@@ -62,15 +62,13 @@ public class ProductPutHandler implements HttpHandler{
             Product updateProduct = mapper.readValue(requestBody, Product.class);
 
             this.productDAO.update(updateProduct);
-            byte[] response = mapper.writeValueAsBytes(updateProduct);
 
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
+            exchange.sendResponseHeaders(200, -1);
             exchange.close();
             logger.info("Product updated with Id {}", updateProduct.getId());
         } catch (Exception e) {
             exchange.sendResponseHeaders(405, -1);
+            exchange.close();
             logger.error("Error processing request: " + e.getMessage());
         }
     }

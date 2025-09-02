@@ -60,15 +60,13 @@ public class CategoryPostHandler implements HttpHandler {
             Category newCategory = mapper.readValue(requestBody, Category.class);
 
             this.categoryService.create(newCategory);
-            byte[] response = mapper.writeValueAsBytes(newCategory);
 
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
+            exchange.sendResponseHeaders(200, -1);
             exchange.close();
             logger.info("Category created with Id {}", newCategory.getId());
         } catch (Exception e) {
             exchange.sendResponseHeaders(405, -1);
+            exchange.close();
             logger.error("Error processing request: " + e.getMessage());
         }
     }

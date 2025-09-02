@@ -60,15 +60,13 @@ public class CategoryPutHandler implements HttpHandler {
             Category updateCategory = mapper.readValue(requestBody, Category.class);
 
             this.categoryDAO.update(updateCategory);
-            byte[] response = mapper.writeValueAsBytes(updateCategory);
 
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
+            exchange.sendResponseHeaders(200, -1);
             exchange.close();
             logger.info("Category updated with Id {}", updateCategory.getId());
         } catch (Exception e) {
             exchange.sendResponseHeaders(405, -1);
+            exchange.close();
             logger.error("Error processing request: " + e.getMessage());
         }
     }

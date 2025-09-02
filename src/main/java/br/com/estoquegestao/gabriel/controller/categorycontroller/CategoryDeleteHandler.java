@@ -4,7 +4,6 @@ import br.com.estoquegestao.gabriel.dao.CategoryDAO;
 import br.com.estoquegestao.gabriel.model.Category;
 import br.com.estoquegestao.gabriel.utils.JwtUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.slf4j.Logger;
@@ -16,7 +15,6 @@ import java.util.Optional;
 
 public class CategoryDeleteHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(CategoryDeleteHandler.class);
-    private final ObjectMapper mapper = new ObjectMapper();
     private final CategoryDAO categoryDAO;
 
     public CategoryDeleteHandler(CategoryDAO categoryDAO) {
@@ -67,14 +65,11 @@ public class CategoryDeleteHandler implements HttpHandler {
             }
             this.categoryDAO.delete(id);
 
-            byte[] response = mapper.writeValueAsBytes(category.get());
-
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
+            exchange.sendResponseHeaders(200, -1);
             exchange.close();
         } catch (Exception e) {
             exchange.sendResponseHeaders(405, -1);
+            exchange.close();
             logger.error("Error processing request: " + e.getMessage());
         }
     }

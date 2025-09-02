@@ -60,15 +60,13 @@ public class ProductPostHandler implements HttpHandler {
             Product newProduct = mapper.readValue(requestBody, Product.class);
 
             this.productDAO.create(newProduct);
-            byte[] response = mapper.writeValueAsBytes(newProduct);
 
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
+            exchange.sendResponseHeaders(200, -1);
             exchange.close();
             logger.info("Product created with Id {}", newProduct.getId());
         } catch (Exception e) {
             exchange.sendResponseHeaders(405, -1);
+            exchange.close();
             logger.error("Error processing request: " + e.getMessage());
         }
     }

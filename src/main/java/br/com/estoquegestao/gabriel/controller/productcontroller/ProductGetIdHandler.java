@@ -74,6 +74,7 @@ public class ProductGetIdHandler implements HttpHandler {
             exchange.close();
         } catch (Exception e) {
             exchange.sendResponseHeaders(405, -1);
+            exchange.close();
             logger.error("Error processing request: " + e.getMessage());
         }
     }

@@ -11,7 +11,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.estoquegestao.gabriel.dao.ProductDAO;
 import br.com.estoquegestao.gabriel.model.Product;
@@ -19,7 +18,6 @@ import br.com.estoquegestao.gabriel.utils.JwtUtil;
 
 public class ProductDeleteHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(ProductDeleteHandler.class);
-    private final ObjectMapper mapper = new ObjectMapper();
     private final ProductDAO productDAO;
 
     public ProductDeleteHandler(ProductDAO productDAO) {
@@ -70,14 +68,11 @@ public class ProductDeleteHandler implements HttpHandler {
             }
             this.productDAO.delete(id);
 
-            byte[] response = mapper.writeValueAsBytes(product.get());
-
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, response.length);
-            exchange.getResponseBody().write(response);
+            exchange.sendResponseHeaders(200,-1);
             exchange.close();
         } catch (Exception e) {
             exchange.sendResponseHeaders(405, -1);
+            exchange.close();
             logger.error("Error processing request: " + e.getMessage());
         }
     }
